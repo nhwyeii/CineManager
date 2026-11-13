@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đăng ký | CineManager</title>
+  <script src="/validation.js" defer></script>
+  <script src="/auth.js" defer></script>
+</head>
+<body>
+  <main>
+    <a href="/">Trang chủ</a>
+    <h1>Đăng ký</h1>
+
+    <form data-api="dang-ky">
+      <p>
+        <label>Họ tên
+          <input name="ho_ten" autocomplete="name" maxlength="100" required>
+        </label>
+      </p>
+      <p>
+        <label>Tên đăng nhập
+          <input name="ten_dang_nhap" autocomplete="username" maxlength="50" required>
+        </label>
+      </p>
+      <p>
+        <label>Mật khẩu
+          <input name="mat_khau" type="password" autocomplete="new-password"
+                 minlength="8" maxlength="128" required>
+        </label>
+      </p>
+      <button type="submit">Tạo tài khoản</button>
+    </form>
+
+    <p id="thong-bao" role="status"></p>
+    <a href="/login.html">Về đăng nhập</a>
+  </main>
+</body>
+</html>
