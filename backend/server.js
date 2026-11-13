@@ -1,12 +1,15 @@
 const express = require('express');
 const { ketNoiDatabase } = require('./src/db');
+const { ganApiTaiKhoan } = require('./src/auth');
 
 const app = express();
+app.use(express.json({ limit: '8kb' }));
 const path = require('node:path');
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 async function khoiDong() {
   const pool = await ketNoiDatabase();
+  ganApiTaiKhoan(app, pool);
 
   app.get('/api/phim', async (req, res) => {
     try {
