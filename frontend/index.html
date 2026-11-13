@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Danh sách phim | CineManager</title>
+</head>
+<body>
+  <main>
+    <h1>Danh sách phim</h1>
+    <p id="thong-bao" role="status">Đang tải phim…</p>
+    <ul id="danh-sach-phim"></ul>
+  </main>
+
+  <script>
+    const thongBao = document.getElementById('thong-bao');
+    const danhSach = document.getElementById('danh-sach-phim');
+
+    async function taiDanhSachPhim() {
+      try {
+        const phanHoi = await fetch('/api/phim');
+        if (!phanHoi.ok) {
+          throw new Error(`API trả về mã ${phanHoi.status}`);
+        }
+
+        const cacPhim = await phanHoi.json();
+        for (const phim of cacPhim) {
+          const dong = document.createElement('li');
+          dong.textContent =
+            `${phim.ten_phim} — ${phim.the_loai} — ${phim.thoi_luong_phut} phút`;
+          danhSach.appendChild(dong);
+        }
+
+        thongBao.textContent = cacPhim.length
+          ? `Tìm thấy ${cacPhim.length} phim.`
+          : 'Chưa có phim.';
+      } catch (loi) {
+        thongBao.textContent = `Không tải được danh sách phim. ${loi.message}`;
+      }
+    }
+
+    taiDanhSachPhim();
+  </script>
+</body>
+</html>
