@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Danh sách phim | CineManager</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
 </head>
 <body>
-  <main>
+  <header id="dau-trang"></header>
+  <main id="noi-dung">
     <h1>Danh sách phim</h1>
     <p id="thong-bao" role="status">Đang tải phim…</p>
     <ul id="danh-sach-phim"></ul>
   </main>
+  <footer id="chan-trang"></footer>
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const thongBao = document.getElementById('thong-bao');
