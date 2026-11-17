@@ -1,0 +1,78 @@
+erDiagram
+    ROLES ||--o{ USERS : "gán cho"
+    ROLES ||--o{ ROLE_PERMISSIONS : "có"
+    PERMISSIONS ||--o{ ROLE_PERMISSIONS : "thuộc"
+    ROLES {
+        text code PK
+        text name
+    }
+    PERMISSIONS {
+        text code PK
+        text description
+    }
+    ROLE_PERMISSIONS {
+        text role_code FK
+        text permission_code FK
+    }
+    USERS ||--o{ SESSIONS : "có"
+    USERS ||--o{ BOOKINGS : "đặt"
+    USERS ||--o{ BOOKINGS : "bán tại quầy (sold_by)"
+    MOVIES ||--o{ SHOWTIMES : "được chiếu"
+    ROOMS ||--o{ SHOWTIMES : "tổ chức"
+    SHOWTIMES ||--o{ BOOKINGS : "có vé"
+    USERS {
+        int id PK
+        text username UK
+        text email UK
+        text full_name
+        text phone
+        text password_hash
+        text role "customer | staff | manager"
+        text created_at
+    }
+    SESSIONS {
+        text token_hash PK
+        int user_id FK
+        int expires_at
+    }
+    MOVIES {
+        int id PK
+        text title UK
+        text genre
+        int duration_min
+        text description
+    }
+    ROOMS {
+        int id PK
+        text name UK
+        int capacity
+    }
+    SHOWTIMES {
+        int id PK
+        int movie_id FK
+        int room_id FK
+        text show_date
+        text show_time
+        int price
+        text status "Pending | Done"
+        text note
+    }
+    BOOKINGS {
+        int id PK
+        int user_id FK
+        int showtime_id FK
+        int seats
+        int total_price
+        text channel "online | counter"
+        int sold_by FK
+        text customer_phone "bắt buộc khi bán quầy"
+        text customer_name
+        text created_at
+    }
+    CONTACTS {
+        int id PK
+        text name
+        text email
+        text message
+        text created_at
+    }

@@ -1,0 +1,18 @@
+flowchart LR
+    subgraph Client["Trình duyệt (Frontend)"]
+        P["HTML + CSS + Bootstrap"]
+        J["JavaScript: app.js, api.js, validation.js, trang riêng"]
+    end
+    subgraph Server["Máy chủ Node.js (Backend)"]
+        S["server.js: router, file tĩnh, header bảo mật"]
+        R["routes.js: RESTful API"]
+        A["auth.js: scrypt, phiên cookie HttpOnly"]
+        V["validate.js: kiểm tra dữ liệu server"]
+    end
+    D[("SQLite: cinema.db")]
+    P --- J
+    J -- "fetch JSON /api/..." --> S
+    S --> R
+    R --> A
+    R --> V
+    R -- "SQL" --> D

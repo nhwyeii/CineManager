@@ -1,0 +1,13 @@
+{
+  "name": "cinemanager",
+  "version": "1.0.0",
+  "description": "CineManager - Web quản lý rạp chiếu phim (Node.js + SQLite)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node ../database/reset.js",
+    "test": "node --test tests/api.test.js"
+  },
+  "engines": { "node": ">=22.13" },
+  "license": "ISC"
+}

@@ -1,50 +1,11 @@
-const { randomBytes } = require('node:crypto');
+// Model: bảng sessions (phiên đăng nhập)
+const { db } = require('../db');
 
-const tenCookie = 'cine_session';
-const thoiHan = 8 * 60 * 60 * 1000;
-const tuyChonCookie = {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  path: '/'
+module.exports = {
+  create: (hash, userId, expires) => db.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)').run(hash, userId, expires),
+  findUser: (hash) => db.prepare(
+    `SELECT u.id, u.username, u.email, u.full_name, u.phone, u.role, s.expires_at
+       FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?`).get(hash),
+  remove: (hash) => db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(hash),
+  removeOthers: (userId, currentHash) => db.prepare('DELETE FROM sessions WHERE user_id = ? AND token_hash <> ?').run(userId, currentHash)
 };
-
-function layMaPhien(req) {
-  return req.headers.cookie
-    ?.match(/(?:^|;\s*)cine_session=([a-f0-9]{64})(?:;|$)/)?.[1];
-}
-
-function taoKhoPhien() {
-  const danhSach = new Map();
-
-  setInterval(() => {
-    const hienTai = Date.now();
-    for (const [ma, phien] of danhSach) {
-      if (phien.hetHan <= hienTai) danhSach.delete(ma);
-    }
-  }, 60_000).unref();
-
-  return {
-    cap(req, res, ten) {
-      danhSach.delete(layMaPhien(req));
-      const ma = randomBytes(32).toString('hex');
-      danhSach.set(ma, { ten, hetHan: Date.now() + thoiHan });
-      res.cookie(tenCookie, ma, { ...tuyChonCookie, maxAge: thoiHan });
-    },
-
-    layTen(req) {
-      const ma = layMaPhien(req);
-      const phien = danhSach.get(ma);
-      if (phien?.hetHan > Date.now()) return phien.ten;
-      danhSach.delete(ma);
-      return null;
-    },
-
-    huy(req, res) {
-      danhSach.delete(layMaPhien(req));
-      res.clearCookie(tenCookie, tuyChonCookie);
-    }
-  };
-}
-
-module.exports = { taoKhoPhien };
