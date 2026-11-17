@@ -1,0 +1,180 @@
+/* ============ CineManager - giao diện đặt vé xem phim ============ */
+:root {
+  --cine-primary: #2d274b;
+  --cine-secondary: #273946;
+  --cine-dark: #0b0b12;
+  --cine-red: #e23744;
+  --cine-red-dark: #b9222f;
+  --cine-gold: #f5b942;
+}
+
+/* Nền tối kiểu rạp phim */
+[data-bs-theme="dark"] {
+  --bs-body-bg: #0f0f17;
+  --bs-body-bg-rgb: 15, 15, 23;
+  --bs-tertiary-bg: #161622;
+  --bs-tertiary-bg-rgb: 22, 22, 34;
+  --bs-secondary-bg: #1c1c2b;
+  --bs-border-color: #2a2a3d;
+  --bs-card-bg: #171724;
+}
+
+body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+
+/* ---------- Thanh điều hướng ---------- */
+.cinema-navbar { background: var(--cine-dark); border-bottom: 3px solid var(--cine-red); }
+.cinema-navbar .navbar-brand { font-weight: 800; letter-spacing: .3px; }
+.cinema-navbar .navbar-brand i { color: var(--cine-red); }
+.cinema-navbar .nav-link.active { color: #fff; font-weight: 600; border-bottom: 2px solid var(--cine-red); }
+
+/* ---------- Nút chính ---------- */
+.btn-cine { background: var(--cine-red); border-color: var(--cine-red); color: #fff; font-weight: 600; }
+.btn-cine:hover, .btn-cine:focus { background: var(--cine-red-dark); border-color: var(--cine-red-dark); color: #fff; }
+.btn-cine:disabled { background: #6b6b78; border-color: #6b6b78; }
+.disabled-look { pointer-events: none; opacity: .85; }
+
+/* ---------- Poster phim ---------- */
+.poster { position: relative; aspect-ratio: 2 / 3; border-radius: .6rem; overflow: hidden; background: #1c1c2b; box-shadow: 0 .4rem 1rem rgba(0, 0, 0, .35); }
+.poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.poster-art {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; padding: 1rem; text-align: center; color: #fff;
+  background: radial-gradient(circle at 30% 20%, hsl(var(--h) 80% 55% / .35), transparent 55%), linear-gradient(160deg, hsl(var(--h) 55% 36%), hsl(calc(var(--h) + 45) 60% 13%));
+}
+.poster-art i { font-size: 2.6rem; opacity: .9; }
+.poster-art span { font-weight: 800; font-size: 1.05rem; line-height: 1.2; text-shadow: 0 2px 6px rgba(0, 0, 0, .5); text-transform: uppercase; letter-spacing: .5px; }
+.age-badge { position: absolute; top: .5rem; left: .5rem; padding: .15rem .45rem; border-radius: .3rem; font-size: .72rem; font-weight: 800; color: #fff; background: #198754; }
+.age-T13 { background: #d99a00; color: #1a1a1a; }
+.age-T16 { background: #e8710a; }
+.age-T18 { background: #d62839; }
+
+.movie-card { display: block; color: inherit; text-decoration: none; }
+.movie-card .poster { transition: transform .2s ease, box-shadow .2s ease; }
+.movie-card:hover .poster { transform: translateY(-4px); box-shadow: 0 .8rem 1.6rem rgba(226, 55, 68, .25); }
+.movie-meta { padding-top: .6rem; }
+.movie-title { font-size: 1rem; font-weight: 700; margin: 0 0 .15rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- Banner trang chủ ---------- */
+.hero-slide { position: relative; min-height: 420px; color: #fff; display: flex; align-items: center; overflow: hidden;
+  background: linear-gradient(120deg, hsl(var(--h) 55% 22%), hsl(calc(var(--h) + 50) 55% 9%) 70%); }
+.hero-slide::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 85% 30%, hsl(var(--h) 80% 55% / .25), transparent 50%); pointer-events: none; }
+.hero-slide .container { position: relative; z-index: 1; }
+.hero-slide h1 { font-weight: 800; text-shadow: 0 2px 10px rgba(0, 0, 0, .5); }
+.hero-slide .lead { max-width: 560px; font-size: 1.05rem; opacity: .9; }
+.hero-poster { max-width: 210px; margin: 0 1.5rem 0 auto; transform: rotate(3deg); }
+#heroCarousel .carousel-indicators { margin-bottom: 1rem; }
+#heroCarousel .carousel-control-prev, #heroCarousel .carousel-control-next { width: 6%; }
+.hero-empty { background: linear-gradient(135deg, rgba(20,20,31,.92), rgba(72,35,66,.75)); }
+
+/* Thanh mua vé nhanh */
+.quick-book { margin-top: -2.2rem; position: relative; z-index: 5; background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color); border-radius: .8rem; box-shadow: 0 .6rem 1.6rem rgba(0, 0, 0, .35); }
+.quick-book .form-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; color: var(--bs-secondary-color); margin-bottom: .2rem; }
+
+.section-title { font-weight: 800; border-left: 4px solid var(--cine-red); padding-left: .7rem; }
+.nav-pills-cine .nav-link { color: var(--bs-body-color); border-radius: 2rem; padding: .35rem 1.1rem; font-weight: 600; }
+.nav-pills-cine .nav-link.active { background: var(--cine-red); color: #fff; }
+
+.step-icon { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--cine-red); color: #fff; font-size: 1.5rem; }
+
+/* ---------- Trang chi tiết phim ---------- */
+.movie-hero { position: relative; color: #fff; padding: 2.5rem 0; background: linear-gradient(120deg, hsl(var(--h) 55% 22%), hsl(calc(var(--h) + 50) 55% 9%) 75%); }
+.movie-hero h1 { font-weight: 800; }
+.info-pill { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem; border-radius: 2rem; background: rgba(255, 255, 255, .14); font-size: .85rem; margin: 0 .35rem .35rem 0; }
+.movie-hero .poster { max-width: 260px; }
+
+/* ---------- Chọn ngày + suất chiếu ---------- */
+.date-strip { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .4rem; scrollbar-width: thin; }
+.date-chip { flex: 0 0 auto; width: 64px; padding: .4rem 0; border: 1px solid var(--bs-border-color); border-radius: .6rem; background: var(--bs-tertiary-bg); color: var(--bs-body-color);
+  display: flex; flex-direction: column; align-items: center; line-height: 1.15; transition: background .15s, border-color .15s; }
+.date-chip .dow { font-size: .72rem; color: var(--bs-secondary-color); text-transform: uppercase; }
+.date-chip .dnum { font-size: 1.35rem; font-weight: 800; }
+.date-chip .mon { font-size: .7rem; color: var(--bs-secondary-color); }
+.date-chip:hover { border-color: var(--cine-red); }
+.date-chip.active { background: var(--cine-red); border-color: var(--cine-red); color: #fff; }
+.date-chip.active .dow, .date-chip.active .mon { color: rgba(255, 255, 255, .85); }
+
+.time-chip { display: inline-flex; flex-direction: column; align-items: center; min-width: 92px; padding: .4rem .7rem; border: 1px solid var(--bs-border-color); border-radius: .5rem;
+  background: var(--bs-tertiary-bg); color: var(--bs-body-color); text-decoration: none; line-height: 1.2; transition: border-color .15s, transform .15s; }
+.time-chip strong { font-size: 1.05rem; }
+.time-chip small { font-size: .7rem; color: var(--bs-secondary-color); }
+.time-chip:hover { border-color: var(--cine-red); color: var(--bs-body-color); transform: translateY(-2px); }
+.time-chip.few { border-color: var(--cine-gold); }
+.time-chip.full { opacity: .45; pointer-events: none; text-decoration: line-through; }
+.show-row { border-bottom: 1px solid var(--bs-border-color); }
+.show-row:last-child { border-bottom: 0; }
+.mini-poster { width: 84px; flex: 0 0 84px; }
+.mini-poster { text-decoration: none; color: inherit; display: block; }
+.mini-poster .age-badge { font-size: .62rem; top: .3rem; left: .3rem; }
+.mini-poster .poster-art { padding: .4rem; gap: .3rem; }
+.mini-poster .poster-art i { font-size: 1.2rem; }
+.mini-poster .poster-art span { font-size: .6rem; letter-spacing: 0; }
+
+/* ---------- Sơ đồ ghế ---------- */
+.screen { width: 80%; max-width: 560px; height: 38px; margin: 0 auto 1.8rem; text-align: center; color: var(--bs-secondary-color); font-size: .75rem; letter-spacing: 6px; text-transform: uppercase; line-height: 64px;
+  border-top: 5px solid var(--cine-red); border-radius: 50% 50% 0 0 / 100% 100% 0 0; background: linear-gradient(to bottom, rgba(226, 55, 68, .22), transparent); }
+.seat-map { overflow-x: auto; padding-bottom: .5rem; }
+.seat-map-inner { min-width: 300px; max-width: 640px; margin: 0 auto; }
+.seat-row { display: flex; align-items: center; gap: .4rem; margin-bottom: .35rem; }
+.seat-row .row-name { width: 1.4rem; text-align: center; font-size: .75rem; font-weight: 700; color: var(--bs-secondary-color); flex: 0 0 1.4rem; }
+.seat-row .seats { flex: 1; display: flex; gap: .25rem; justify-content: center; }
+.seat { flex: 0 1 36px; min-width: 0; aspect-ratio: 1; padding: 0; border-radius: .35rem .35rem .2rem .2rem; font-size: .62rem; font-weight: 700; line-height: 1; cursor: pointer;
+  border: 1px solid #4b5563; background: #3a3f4b; color: #dfe3ea; transition: transform .1s, background .15s; }
+.seat:hover:not(:disabled) { transform: scale(1.12); border-color: #fff; }
+.seat.vip { background: #5b3a86; border-color: #8b5fc0; }
+.seat.selected { background: var(--cine-red); border-color: #ff8a93; color: #fff; }
+.seat.taken, .seat:disabled { background: #1b1b24; border-color: #2a2a3a; color: #555; cursor: not-allowed; }
+.seat.taken { background-image: repeating-linear-gradient(45deg, transparent 0 4px, rgba(255, 255, 255, .06) 4px 6px); }
+.seat-gap { flex: 0 0 .9rem; }
+.legend-seat { display: inline-block; width: 18px; height: 18px; border-radius: .25rem; vertical-align: -4px; margin-right: .3rem; border: 1px solid #4b5563; }
+.legend-seat.std { background: #3a3f4b; }
+.legend-seat.vip { background: #5b3a86; border-color: #8b5fc0; }
+.legend-seat.sel { background: var(--cine-red); border-color: #ff8a93; }
+.legend-seat.tkn { background: #1b1b24; border-color: #2a2a3a; }
+.booking-summary { position: sticky; top: 76px; }
+.seat-pill { display: inline-block; padding: .1rem .5rem; margin: 0 .25rem .25rem 0; border-radius: .3rem; background: var(--cine-red); color: #fff; font-weight: 700; font-size: .82rem; }
+.seat-pill.vip { background: #5b3a86; }
+
+/* ---------- Vé điện tử ---------- */
+.ticket { display: flex; border: 1px solid var(--bs-border-color); border-radius: .8rem; overflow: hidden; background: var(--bs-card-bg); transition: transform .2s; }
+.ticket:hover { transform: translateY(-2px); }
+.ticket-main { flex: 1; padding: 1rem 1.1rem; display: flex; gap: 1rem; min-width: 0; }
+.ticket-stub { flex: 0 0 150px; padding: 1rem; text-align: center; border-left: 2px dashed var(--bs-border-color); position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: .3rem; }
+.ticket-stub::before, .ticket-stub::after { content: ""; position: absolute; left: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); }
+.ticket-stub::before { top: -11px; } .ticket-stub::after { bottom: -11px; }
+.ticket.is-past { opacity: .6; filter: grayscale(.4); }
+.ticket-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; letter-spacing: 1px; }
+.barcode { width: 100%; height: 34px; background: repeating-linear-gradient(90deg, var(--bs-body-color) 0 2px, transparent 2px 4px, var(--bs-body-color) 4px 5px, transparent 5px 8px, var(--bs-body-color) 8px 11px, transparent 11px 13px); opacity: .8; border-radius: 2px; }
+.ticket-title { font-weight: 800; font-size: 1.1rem; }
+@media (max-width: 575.98px) {
+  .ticket { flex-direction: column; }
+  .ticket-stub { flex-basis: auto; border-left: 0; border-top: 2px dashed var(--bs-border-color); flex-direction: row; justify-content: space-between; }
+  .ticket-stub::before, .ticket-stub::after { top: -11px; left: auto; }
+  .ticket-stub::before { left: -11px; } .ticket-stub::after { right: -11px; bottom: auto; }
+  .ticket-stub .barcode { width: 90px; }
+  .ticket-main .mini-poster { width: 64px; flex-basis: 64px; }
+}
+
+/* ---------- Dùng chung ---------- */
+.feature-icon { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--cine-red); color: #fff; font-size: 1.6rem; }
+.stat-card .stat-number { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+.page-header { background: var(--bs-tertiary-bg); border-bottom: 1px solid var(--bs-border-color); }
+.empty-state { color: var(--bs-secondary-color); }
+.fade-in { animation: fadeIn .35s ease both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.site-footer { background: var(--cine-dark); color: #8a94a3; border-top: 3px solid var(--cine-red); }
+.site-footer a { color: #b7c0cc; text-decoration: none; }
+.site-footer a:hover { color: #fff; text-decoration: underline; }
+.chart-box { position: relative; max-width: 320px; margin: 0 auto; }
+
+@media (prefers-reduced-motion: reduce) { .fade-in, .movie-card .poster, .time-chip, .ticket { animation: none; transition: none; } }
+@media (max-width: 575.98px) {
+  .hero-slide { min-height: 360px; }
+  .hero-slide h1 { font-size: 1.7rem; }
+  .movie-hero .poster { max-width: 180px; margin: 0 auto 1rem; }
+  .quick-book { margin-top: -1.2rem; }
+}
+
+/* Xem trước poster trong form thêm / sửa phim */
+.poster-preview { width: 96px; flex: 0 0 96px; aspect-ratio: 2 / 3; border-radius: .5rem; overflow: hidden; border: 1px dashed var(--bs-border-color); display: flex; align-items: center; justify-content: center; text-align: center; background: var(--bs-tertiary-bg); }
+.poster-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.admin-thumb { width: 34px; height: 51px; object-fit: cover; border-radius: .25rem; margin-right: .6rem; vertical-align: middle; }

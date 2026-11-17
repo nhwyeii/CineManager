@@ -1,0 +1,23 @@
+flowchart LR
+    K(["Khách vãng lai"])
+    C(["Khách hàng"])
+    NV(["Nhân viên"])
+    QL(["Quản lý"])
+    C -. "kế thừa" .-> K
+    QL -. "kế thừa" .-> NV
+    K --- UC1["Xem phim, lịch chiếu, sơ đồ ghế"]
+    K --- UC2["Tìm kiếm / lọc / phân trang"]
+    K --- UC4["Gửi liên hệ (khách, khách hàng)"]
+    K --- UC5["Đăng ký / Đăng nhập"]
+    C --- UC6["Đặt vé / Hủy vé của mình"]
+    C --- UC7["Xem vé của tôi"]
+    C --- UC8["Cập nhật hồ sơ, đổi mật khẩu"]
+    NV --- UC9["Bán vé tại quầy (nhập SĐT khách)"]
+    NV --- UC10["Xem / hủy vé của mọi khách"]
+    NV --- UC11["Sửa suất chiếu"]
+    NV --- UC12["Đọc liên hệ của khách"]
+    QL --- UC13["CRUD phim (kèm ảnh poster), phòng chiếu"]
+    QL --- UC14["Xóa suất chiếu, xóa liên hệ"]
+    QL --- UC15["Quản lý người dùng (đổi vai trò)"]
+    QL --- UC16["Xem thống kê, doanh thu"]
+    QL --- UC17["Thêm / xóa suất chiếu"]
