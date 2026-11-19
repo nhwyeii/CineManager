@@ -1,5 +1,5 @@
 // Middleware: xác định người dùng từ cookie + kiểm tra quyền truy cập route (RBAC)
-// Quyền của từng vai trò nằm trong CSDL (bảng role_permissions, nạp từ database/permissions.sql).
+// Quyền của từng vai trò nằm trong CSDL (bảng role_permissions, nạp từ database/01_CauTruc_PhanQuyen.sql).
 const { db } = require('../db');
 const security = require('../utils/security');
 const sessionModel = require('../models/sessionModel');
@@ -7,14 +7,16 @@ const { HttpError } = require('../utils/http');
 
 // Cache: vai trò -> tập mã quyền (đọc 1 lần từ CSDL)
 let cache = null;
-function rolePermissions(role) {
-  if (!cache) {
-    cache = new Map();
-    db.prepare('SELECT role_code, permission_code FROM role_permissions').all().forEach((r) => {
-      if (!cache.has(r.role_code)) cache.set(r.role_code, new Set());
-      cache.get(r.role_code).add(r.permission_code);
-    });
+async function loadPermissions() {
+  const next = new Map();
+  for (const r of await db.prepare('SELECT role_code, permission_code FROM role_permissions').all()) {
+    if (!next.has(r.role_code)) next.set(r.role_code, new Set());
+    next.get(r.role_code).add(r.permission_code);
   }
+  cache = next;
+}
+function rolePermissions(role) {
+  if (!cache) throw new Error('Chưa nạp phân quyền khi khởi động.');
   return cache.get(role) || new Set();
 }
 
@@ -29,13 +31,13 @@ function withPermissions(user) {
 }
 
 // Trả về user đang đăng nhập (hoặc null)
-function getUser(req) {
+async function getUser(req) {
   const token = security.parseCookies(req).sid;
   if (!token) return null;
   const hash = security.sha256(token);
-  const row = sessionModel.findUser(hash);
+  const row = await sessionModel.findUser(hash);
   if (!row) return null;
-  if (row.expires_at < Date.now()) { sessionModel.remove(hash); return null; }
+  if (row.expires_at < Date.now()) { await sessionModel.remove(hash); return null; }
   delete row.expires_at;
   return row;
 }
@@ -48,4 +50,4 @@ function authorize(access, user) {
   throw new HttpError(403, 'Bạn không có quyền thực hiện chức năng này.');
 }
 
-module.exports = { getUser, authorize, can, withPermissions };
+module.exports = { getUser, authorize, can, withPermissions, loadPermissions };

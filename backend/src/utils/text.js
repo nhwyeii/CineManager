@@ -18,14 +18,14 @@ function paginate(list, query, defaultLimit) {
   return { items: list.slice((page - 1) * limit, page * limit), total, page, limit, totalPages };
 }
 
-// Chuyển lỗi ràng buộc của SQLite thành thông báo thân thiện
+// Chuyển lỗi ràng buộc của SQL Server thành thông báo thân thiện
 function dbError(err, messages) {
   const msg = String(err && err.message);
-  if (msg.includes('UNIQUE constraint failed')) {
-    const key = Object.keys(messages.unique || {}).find((k) => msg.includes(k));
+  if ([2601, 2627].includes(err.number)) {
+    const key = Object.keys(messages.unique || {}).find((k) => msg.includes(k) || msg.includes(k.split('.')[0]));
     return new HttpError(409, key ? messages.unique[key] : 'Dữ liệu bị trùng.');
   }
-  if (msg.includes('FOREIGN KEY constraint failed')) return new HttpError(409, messages.fk || 'Dữ liệu đang được sử dụng ở nơi khác.');
+  if (err.number === 547) return new HttpError(409, messages.fk || 'Dữ liệu đang được sử dụng ở nơi khác.');
   return err;
 }
 

@@ -9,7 +9,7 @@ flowchart LR
         A["auth.js: scrypt, phiên cookie HttpOnly"]
         V["validate.js: kiểm tra dữ liệu server"]
     end
-    D[("SQLite: cinema.db")]
+    D[("SQL Server: CineManagerSQLServer")]
     P --- J
     J -- "fetch JSON /api/..." --> S
     S --> R

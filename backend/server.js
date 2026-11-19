@@ -1,23 +1,13 @@
-// CineManager - máy chủ Node.js (không cần cài thư viện ngoài)
-// Chạy:  node server.js   (hoặc: npm start)
-
-// Ẩn cảnh báo "SQLite is an experimental feature" cho gọn console
-const origEmit = process.emitWarning;
-process.emitWarning = function (w, ...rest) {
-  if (String(w && w.message ? w.message : w).includes('SQLite')) return;
-  return origEmit.call(process, w, ...rest);
-};
-
+// CineManager - Node.js + SQL Server. Chạy npm start sau khi tạo database trong SSMS.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const config = require('./src/config');
 const { getUser, authorize } = require('./src/middlewares/auth');
 const { HttpError, readJson, sendJson } = require('./src/utils/http');
-const { seedIfEmpty } = require('./src/seed');
+const { checkDatabase, db } = require('./src/db');
+const { loadPermissions } = require('./src/middlewares/auth');
 const { routes } = require('./src/routes');
-
-if (seedIfEmpty()) console.log('Đã nạp dữ liệu mẫu: quanly / ' + config.adminPassword + ', nhanvien1 / Nhanvien@123, khach / Khach@123.');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
@@ -57,7 +47,7 @@ async function handleApi(req, res, url) {
       const known = routes.some((r) => r.regex.test(url.pathname));
       throw new HttpError(known ? 405 : 404, known ? 'Phương thức không được hỗ trợ.' : 'API không tồn tại.');
     }
-    const user = getUser(req);
+    const user = await getUser(req);
     authorize(route.access, user);
 
     const m = url.pathname.match(route.regex);
@@ -66,7 +56,7 @@ async function handleApi(req, res, url) {
     const query = Object.fromEntries(url.searchParams);
     const body = ['POST', 'PUT', 'PATCH'].includes(req.method) ? await readJson(req) : {};
 
-    const out = route.handler({ req, user, params, query, body });
+    const out = await route.handler({ req, user, params, query, body });
     sendJson(res, out.status || 200, out.data, out.cookie ? { 'Set-Cookie': out.cookie } : undefined);
   } catch (err) {
     if (err instanceof HttpError) {
@@ -87,8 +77,20 @@ const server = http.createServer((req, res) => {
   try { serveStatic(req, res, url.pathname); } catch (e) { notFound(res); }
 });
 
-if (require.main === module) {
-  server.listen(config.port, () => console.log('CineManager đang chạy tại http://localhost:' + config.port));
+async function initialize() {
+  await checkDatabase();
+  await loadPermissions();
 }
-
+if (require.main === module) {
+  initialize().then(() => {
+    server.listen(config.port, () => console.log('CineManager (SQL Server) đang chạy tại http://localhost:' + config.port));
+    server.on('error', async err => { console.error('Không mở được web:', err.message); await db.close(); process.exitCode = 1; });
+  }).catch(async err => {
+    console.error('Không khởi động được SQL Server:', err.message);
+    console.error('Kiểm tra backend/.env và chạy 2 file SQL trong SSMS. Chạy npm run db:check để kiểm tra kết nối.');
+    await db.close();
+    process.exitCode = 1;
+  });
+}
+server.initialize = initialize;
 module.exports = server;

@@ -1,60 +1,168 @@
-// Kết nối SQLite (module có sẵn trong Node 22: node:sqlite) và tạo bảng từ schema.sql
-const fs = require('fs');
-const path = require('path');
-const { DatabaseSync } = require('node:sqlite');
+// SQL Server: truy vấn có tham số và transaction dùng cùng một kết nối.
+const sql = require('./sql-client');
+const { AsyncLocalStorage } = require('node:async_hooks');
 const config = require('./config');
 
-fs.mkdirSync(path.dirname(config.dbFile), { recursive: true });
-const db = new DatabaseSync(config.dbFile);
-db.exec('PRAGMA foreign_keys = ON;');
-db.exec('PRAGMA journal_mode = WAL;');
-db.exec(fs.readFileSync(path.join(config.databaseDir, 'schema.sql'), 'utf8'));
-// Vai trò + quyền (INSERT OR IGNORE nên chạy lại mỗi lần khởi động vẫn an toàn)
-db.exec(fs.readFileSync(path.join(config.databaseDir, 'permissions.sql'), 'utf8'));
+const context = new AsyncLocalStorage();
+const pool = new sql.ConnectionPool(config.sqlServer);
 
-// Nâng cấp CSDL cũ (tạo từ phiên bản trước): thêm cột mới cho bảng movies
-const movieCols = db.prepare('PRAGMA table_info(movies)').all().map((c) => c.name);
-[['age_rating', "TEXT NOT NULL DEFAULT 'T13'"], ['release_date', "TEXT NOT NULL DEFAULT ''"], ['poster_url', "TEXT NOT NULL DEFAULT ''"]]
-  .forEach(([name, def]) => { if (!movieCols.includes(name)) db.exec('ALTER TABLE movies ADD COLUMN ' + name + ' ' + def); });
+let connecting;
 
-const showtimeCols = db.prepare('PRAGMA table_info(showtimes)').all();
-if (!showtimeCols.some((column) => column.name === 'poster_url')) {
-  db.exec("ALTER TABLE showtimes ADD COLUMN poster_url TEXT NOT NULL DEFAULT ''");
+function connect() {
+  if (!connecting) {
+    connecting = pool.connect().catch((err) => {
+      connecting = null;
+      throw err;
+    });
+  }
+
+  return connecting;
 }
 
-// Vé cũ chưa có ghế cụ thể: tự xếp vào các ghế trống đầu tiên để dữ liệu nhất quán
-(function backfillSeats() {
-  const seats = require('./utils/seats');
-  const old = db.prepare(`SELECT b.id, b.seats, b.showtime_id, r.capacity FROM bookings b
-      JOIN showtimes s ON s.id = b.showtime_id JOIN rooms r ON r.id = s.room_id
-     WHERE NOT EXISTS (SELECT 1 FROM booking_seats x WHERE x.booking_id = b.id) ORDER BY b.id`).all();
-  const taken = db.prepare('SELECT seat_label FROM booking_seats WHERE showtime_id = ?');
-  const add = db.prepare('INSERT OR IGNORE INTO booking_seats (booking_id, showtime_id, seat_label) VALUES (?, ?, ?)');
-  old.forEach((b) => {
-    const used = new Set(taken.all(b.showtime_id).map((x) => x.seat_label));
-    seats.flat(b.capacity).filter((s) => !used.has(s.label)).slice(0, b.seats).forEach((s) => add.run(b.id, b.showtime_id, s.label));
-  });
-})();
+// Đổi dấu ? thành tham số riêng, tránh trùng tên nội bộ của driver.
+function parameterize(text, values) {
+  let index = 0;
 
-// Chạy nhiều câu lệnh trong 1 transaction (lỗi thì rollback)
-function transaction(fn) {
-  db.exec('BEGIN');
+  const query = text.replace(
+    /'(?:''|[^'])*'|\?/g,
+    (token) => token === '?' ? '@cm_arg_' + index++ : token
+  );
+
+  if (index !== values.length) {
+    throw new Error('Số tham số SQL không khớp.');
+  }
+
+  return query;
+}
+
+async function execute(text, values = [], insertId = false) {
+  await connect();
+
+  const request = new sql.Request(context.getStore() || pool);
+
+  values.forEach((value, i) => {
+    const name = 'cm_arg_' + i;
+
+    if (
+      typeof value === 'number' &&
+      Number.isInteger(value) &&
+      Math.abs(value) > 2147483647
+    ) {
+      request.input(name, sql.BigInt, value);
+    } else {
+      request.input(name, value === undefined ? null : value);
+    }
+  });
+
+  let query = parameterize(text, values);
+
+  if (insertId) {
+    query = query.replace(
+      /\bVALUES\s*\(/i,
+      'OUTPUT INSERTED.id AS inserted_id VALUES ('
+    );
+  }
+
+  return request.query(query);
+}
+
+const db = {
+  prepare(text) {
+    return {
+      async all(...values) {
+        const result = await execute(text, values);
+        return result.recordset || [];
+      },
+
+      async get(...values) {
+        const result = await execute(text, values);
+        return result.recordset?.[0];
+      },
+
+      async run(...values) {
+        const insertId =
+          /^\s*INSERT\s+INTO\s+(users|movies|rooms|showtimes|bookings|booking_seats|contacts)\b/i.test(text);
+
+        const result = await execute(text, values, insertId);
+
+        return {
+          changes: result.rowsAffected.reduce(
+            (total, count) => total + count,
+            0
+          ),
+          lastInsertRowid: result.recordset?.[0]?.inserted_id
+        };
+      }
+    };
+  },
+
+  async close() {
+    await pool.close();
+    connecting = null;
+  }
+};
+
+async function transaction(fn) {
+  if (context.getStore()) {
+    return fn();
+  }
+
+  await connect();
+
+  const tx = new sql.Transaction(pool);
+  let rolledBack = false;
+
+  tx.on('rollback', () => {
+    rolledBack = true;
+  });
+
+  await tx.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
+
   try {
-    const result = fn();
-    db.exec('COMMIT');
+    const result = await context.run(tx, fn);
+    await tx.commit();
     return result;
   } catch (err) {
-    db.exec('ROLLBACK');
+    if (!rolledBack) {
+      try {
+        await tx.rollback();
+      } catch (_) {
+        // Giữ nguyên lỗi ban đầu nếu rollback không thực hiện được.
+      }
+    }
+
     throw err;
   }
 }
 
-// Chỉ chạy một lần để người quản lý vẫn có thể bỏ poster sau khi cập nhật.
-if (db.prepare('PRAGMA user_version').get().user_version < 1) {
-  transaction(() => {
-    db.exec(fs.readFileSync(path.join(config.databaseDir, 'sample-posters.sql'), 'utf8'));
-    db.exec('PRAGMA user_version = 1');
-  });
+async function checkDatabase() {
+  await connect();
+
+  const row = await db.prepare(
+    "SELECT OBJECT_ID(N'dbo.role_permissions', N'U') AS object_id"
+  ).get();
+
+  if (!row?.object_id) {
+    throw new Error(
+      'Chưa tạo bảng. Chạy database/01_CauTruc_PhanQuyen.sql trong SSMS trước.'
+    );
+  }
+
+  const roles = await db.prepare(
+    'SELECT COUNT(*) AS n FROM role_permissions'
+  ).get();
+
+  if (!roles?.n) {
+    throw new Error(
+      'Thiếu dữ liệu phân quyền. Kiểm tra file 01_CauTruc_PhanQuyen.sql.'
+    );
+  }
 }
 
-module.exports = { db, transaction };
+module.exports = {
+  db,
+  transaction,
+  connect,
+  checkDatabase,
+  parameterize
+};

@@ -1,6 +1,6 @@
 // Bảng định tuyến: URL + phương thức HTTP + quyền truy cập -> controller
 // access: 'public' (ai cũng gọi được) hoặc mã quyền trong bảng permissions (VD 'movie:create').
-// Vai trò nào có quyền nào: xem database/permissions.sql
+// Vai trò nào có quyền nào: xem database/01_CauTruc_PhanQuyen.sql
 const auth = require('../controllers/authController');
 const user = require('../controllers/userController');
 const movie = require('../controllers/movieController');

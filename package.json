@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "start": "npm --prefix backend start",
+    "db:check": "npm --prefix backend run db:check",
     "test": "npm --prefix backend test",
-    "seed": "npm --prefix backend run seed"
+    "postinstall": "npm --prefix backend install"
   }
 }
