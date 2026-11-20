@@ -1,8 +1,0 @@
-{
-  "version": "2.0.0",
-  "tasks": [
-    { "label": "Chạy server", "type": "npm", "script": "start", "path": "backend/", "problemMatcher": [] },
-    { "label": "Chạy kiểm thử", "type": "npm", "script": "test", "path": "backend/", "problemMatcher": [], "group": "test" },
-    { "label": "Tạo lại dữ liệu mẫu", "type": "npm", "script": "seed", "path": "backend/", "problemMatcher": [] }
-  ]
-}
